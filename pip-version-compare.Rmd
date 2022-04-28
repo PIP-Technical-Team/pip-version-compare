@@ -1,0 +1,89 @@
+---
+title: "PIP version comparison report"
+output: html_document
+date: "`r Sys.Date()`"
+params:
+  version_new: 20220317_2011_02_02_INT
+  version_old: 20220408_2011_02_02_PROD
+  server_new: dev
+  server_old: prod
+  tolerance: 0.05
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	message = FALSE,
+	warning = FALSE,
+	echo = FALSE
+)
+source("./R/utils.R")
+library(pipr)
+library(dplyr)
+version_new <- params$version_new
+version_old <- params$version_old
+server_new  <- params$server_new
+server_old  <- params$server_old
+tolerance   <- params$tolerance
+```
+
+# Check auxiliary tables
+## Survey means table
+```{r survey-means}
+# Fetch data using API
+table <- "survey_means"
+df_new <- pipr::get_aux(table = table, version = version_new, server = server_new)
+df_old <- pipr::get_aux(table = table, version = version_old, server = server_old)
+# Compare responses
+compare_tables(df_new = df_new, 
+               df_old = df_old, 
+               group_cols = c("survey_id"),
+               tolerance = tolerance)
+```
+
+## Interpolated means table
+```{r interpolated-means}
+# Fetch data using API
+table <- "interpolated_means"
+df_new <- pipr::get_aux(table = table, version = version_new, server = server_new) %>%
+  arrange(interpolation_id, country_code, year, reporting_level) %>%
+  filter(interpolation_id == "CAN_1982_national")
+  # filter(cache_id == "CAN_1981_SCF-LIS_D1_INC_BIN")
+df_old <- pipr::get_aux(table = table, version = version_old, server = server_old) %>%
+  arrange(interpolation_id, country_code, year, reporting_level) %>%
+  filter(interpolation_id == "CAN_1982_national")
+  # filter(cache_id == "CAN_1981_SCF-LIS_D1_INC_BIN")
+# Compare responses
+compare_tables(df_new = df_new, 
+               df_old = df_old, 
+               group_cols = c("interpolation_id", "surveyid_year"),
+               tolerance = tolerance)
+```
+
+
+## GDP table
+```{r gdp}
+# Fetch data using API
+table <- "gdp"
+df_new <- pipr::get_aux(table = table, version = version_new, server = server_new)
+df_old <- pipr::get_aux(table = table, version = version_old, server = server_old)
+# Compare responses
+compare_tables(df_new = df_new, 
+               df_old = df_old, 
+               group_cols = c("country_code", "data_level"),
+               tolerance = tolerance)
+```
+
+## Countries table
+```{r countries}
+# Fetch data using API
+table <- "countries"
+df_new <- pipr::get_aux(table = table, version = version_new, server = server_new)
+df_old <- pipr::get_aux(table = table, version = version_old, server = server_old)
+# Compare responses
+compare_tables(df_new = df_new, 
+               df_old = df_old, 
+               group_cols = c("country_code"),
+               tolerance = tolerance)
+```
+
+
